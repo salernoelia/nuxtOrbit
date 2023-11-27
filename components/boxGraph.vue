@@ -1,16 +1,64 @@
 <template>
-  <div>
+  <div class="main">
+    <div class="filterBox">
+      
+    <button class="filterButton"
+        v-for="ecosystem in ecosystems"
+        :key="ecosystem"
+        @click="toggleEcosystem(ecosystem)"
+        :class="{ active: filter.includes(ecosystem) }"
+      >
+        {{ ecosystem }}
+      </button>
+
+    </div>
+
     <div class="canvas" ref="canvas"></div>
   </div>
 </template>
 
 <style>
+body {
+  top: 0;
+  overflow: hidden;
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+.filterBox {
+  display: flex;
+  flex-direction: row;
+  position: fixed;
+  min-width: 300px;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.filterButton {
+  z-index: 3;
+  margin: 10px;
+  pointer-events: auto;
+ 
+}
+
 .canvas {
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
   position: absolute;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
 }
 </style>
 
@@ -20,13 +68,18 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import data from "~/static/data/data.json";
 
+
 export default {
   data() {
     return {
       data,
+      ecosystems: [], // Array to store unique ecosystems
+      filter: [] // Array to store active filters
     };
   },
   mounted() {
+    
+    this.ecosystems = Array.from(new Set(this.data.map((habitat) => habitat.Habitat_name)));
     
     // Select the canvas element
     const canvas = this.$refs.canvas;
@@ -69,14 +122,14 @@ export default {
     // Draw rectangles with varying sizes and colors
     svg
       .selectAll("rect")
-      .data(nodes)
+      .data(nodes.filter((d) => !this.filter.length || this.filter.includes(d.data.name)))
       .enter()
       .append("rect")
       .attr("x", (d) => d.x0)
       .attr("y", (d) => d.y0)
       .attr("fill", (d) => color(d.depth))
-      .attr("width", (d) => d.x1 - d.x0 ) // Add randomness to width
-      .attr("height", (d) => d.y1 - d.y0) // Add randomness to height
+      .attr("width", (d) => d.x1 - d.x0)
+      .attr("height", (d) => d.y1 - d.y0)
       .attr("stroke", "white")
       .attr("stroke-width", 2);
 
@@ -90,6 +143,8 @@ export default {
 
     // Add axes helpers
     const axesHelper = new THREE.AxesHelper(100);
+
+    
     scene.add(axesHelper);
 
     rectangles.forEach((rectangle, index) => {
@@ -202,6 +257,20 @@ export default {
 
     camera.lookAt(new THREE.Vector3(0, 0, 0)); // Look at the center of the scene
   },
+  methods: {
+  toggleEcosystem(ecosystem) {
+    const index = this.filter.indexOf(ecosystem);
+    if (index === -1) {
+      this.filter.push(ecosystem);
+    } else {
+      this.filter.splice(index, 1);
+    }
+    this.updateGraph();
+  },
+  updateGraph() {
+    d3.select("svg").selectAll("rect").remove();
+  },
+}
 };
 </script>
 
