@@ -1,13 +1,29 @@
 <template>
     <div>
-        <div ref="canvas"></div>
+        <div  class="canvas" ref="canvas"></div>
     </div>
 </template>
+
+<style>
+.canvas {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  position: absolute;
+}
+
+</style>
 
 <script>
 import * as d3 from 'd3';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+export default {
+  mounted() {
+    // Select the canvas element
+    const canvas = this.$refs.canvas;
 
  const data = {
         name: "Root",
@@ -110,21 +126,19 @@ rectangles.forEach((rectangle, index) => {
 
   // Position the meshes to "kiss" each other
   meshPositive.position.set(
-    (parseFloat(rectangle.getAttribute("x")) + rectHeight) / 6,
+    (parseFloat(rectangle.getAttribute("x")) + rectHeight) / 6 - 50,
     -(
       parseFloat(rectangle.getAttribute("y")) +
-      rectHeight / 2 -
-      window.innerHeight / 2
+      rectHeight / 2
     ) / 6,
     0
   );
 
   meshNegative.position.set(
-    (parseFloat(rectangle.getAttribute("x")) + rectHeight) / 6,
+    (parseFloat(rectangle.getAttribute("x")) + rectHeight) / 6 - 50,
     -(
       parseFloat(rectangle.getAttribute("y")) +
-      rectHeight / 2 -
-      window.innerHeight / 2
+      rectHeight / 2
     ) / 6,
     -rectDepth
   );
@@ -156,10 +170,10 @@ rectangles.forEach((rectangle, index) => {
      
 
 
-      // Create a renderer
-      const renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
+      // Create three.js renderer
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    canvas.appendChild(renderer.domElement);
 
         // Create OrbitControls
       // Set up OrbitControls with additional features
@@ -174,17 +188,22 @@ controls.maxPolarAngle = Math.PI; // Adjust as needed
 
       // Animation loop
       const animate = function () {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-        // Update the OrbitControls
-        controls.update();    
-      };
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+      // Update the OrbitControls
+      controls.update();
+    };
+
 
       animate();
 
       
-
+  
       camera.lookAt(new THREE.Vector3(0, 0, 0)); // Look at the center of the scene
+
+    },
+};
+
 </script>
 
 <style lang="scss" scoped>

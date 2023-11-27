@@ -1,6 +1,15 @@
 <template>
-    <div ref="canvas"></div>
+    <div class="canvas" ref="canvas"></div>
   </template>
+
+  <style>
+.canvas {
+  width: 100%;
+  height: 100%;
+  top: 0;
+}
+
+</style>
   
   <script>
  // threeApp.js
