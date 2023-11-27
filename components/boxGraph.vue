@@ -19,9 +19,23 @@
 import * as d3 from 'd3';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import data from '~/static/data/data.json';
+
+
 
 export default {
+
+  data() {
+    return {
+      data,
+    };
+  },
   mounted() {
+
+  
+    console.log(this.data);
+
+    
     // Select the canvas element
     const canvas = this.$refs.canvas;
 
