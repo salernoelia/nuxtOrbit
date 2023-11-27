@@ -27,21 +27,18 @@ export default {
     };
   },
   mounted() {
-    console.log(this.data[0].Area_Habitat);
-
+    
     // Select the canvas element
     const canvas = this.$refs.canvas;
-
+    
+    console.log(this.data[0].Area_Habitat);
     const data = {
-      name: "Root",
-      children: [
-        { name: "Category 1", value: Math.random() * 100 },
-        { name: "Category 2", value: Math.random() * 100 },
-        { name: "Category 3", value: Math.random() * 100 },
-        { name: "Category 4", value: Math.random() * 100 },
-        { name: "Category 5", value: Math.random() * 100 },
-      ],
-    };
+  name: "Root",
+  children: this.data.map((habitat) => ({
+    name: habitat.Habitat_name,
+    value: parseFloat(habitat.Area_Habitat),
+  })),
+};
 
     // Set up dimensions
     const width = 400;
@@ -78,8 +75,8 @@ export default {
       .attr("x", (d) => d.x0)
       .attr("y", (d) => d.y0)
       .attr("fill", (d) => color(d.depth))
-      .attr("width", (d) => d.x1 - d.x0 + Math.random() * 10) // Add randomness to width
-      .attr("height", (d) => d.y1 - d.y0 + Math.random() * 10) // Add randomness to height
+      .attr("width", (d) => d.x1 - d.x0 ) // Add randomness to width
+      .attr("height", (d) => d.y1 - d.y0) // Add randomness to height
       .attr("stroke", "white")
       .attr("stroke-width", 2);
 
