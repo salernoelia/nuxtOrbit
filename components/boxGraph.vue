@@ -27,22 +27,23 @@ export default {
     };
   },
   mounted() {
-    
     // Select the canvas element
     const canvas = this.$refs.canvas;
-    
-    console.log(this.data[0].Area_Habitat);
+
+    console.log(this.data[0].Below_ground_potential_storage);
     const data = {
-  name: "Root",
-  children: this.data.map((habitat) => ({
-    name: habitat.Habitat_name,
-    value: parseFloat(habitat.Area_Habitat),
-  })),
-};
+      name: "Root",
+      children: this.data.map((habitat) => ({
+        name: habitat.Habitat_name,
+        value: parseFloat(habitat.Above_ground_current_storage / 10000000000),
+        depth: parseFloat(habitat.Below_ground_current_storage) / 10000000000,
+        area: parseFloat(habitat.Area_Habitat),
+      })),
+    };
 
     // Set up dimensions
-    const width = 400;
-    const height = 400;
+    const width = 1000;
+    const height = 1000;
 
     // Create SVG container
     const svg = d3
@@ -52,7 +53,7 @@ export default {
       .attr("height", height);
 
     // Create a hierarchical layout
-    const root = d3.hierarchy(data).sum((d) => d.value);
+    const root = d3.hierarchy(data).sum((d) => d.area);
 
     // Create color scale
     const color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -75,7 +76,7 @@ export default {
       .attr("x", (d) => d.x0)
       .attr("y", (d) => d.y0)
       .attr("fill", (d) => color(d.depth))
-      .attr("width", (d) => d.x1 - d.x0 ) // Add randomness to width
+      .attr("width", (d) => d.x1 - d.x0) // Add randomness to width
       .attr("height", (d) => d.y1 - d.y0) // Add randomness to height
       .attr("stroke", "white")
       .attr("stroke-width", 2);
@@ -96,10 +97,10 @@ export default {
       let rectWidth = parseFloat(rectangle.getAttribute("width")) / 6;
       let rectHeight = parseFloat(rectangle.getAttribute("height")) / 6;
 
-      // Generate a random extrusion depth between 10 and 30
-      const rectDepth = Math.random() * (30 - 10) + 10;
+      // Use the depth value from the data for extrusion
+      const rectDepth = nodes[index].data.depth;
 
-      // Extrude in the positive direction
+      // Extrude in the positive direction if the value is positive
       const geometryPositive = new THREE.ExtrudeGeometry(
         new THREE.Shape([
           new THREE.Vector2(0, 0),
@@ -111,7 +112,7 @@ export default {
         { depth: rectDepth, bevelEnabled: false }
       );
 
-      // Extrude in the negative direction
+      // Extrude in the negative direction if the value is negative
       const geometryNegative = new THREE.ExtrudeGeometry(
         new THREE.Shape([
           new THREE.Vector2(0, 0),
