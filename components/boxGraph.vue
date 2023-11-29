@@ -27,18 +27,15 @@ export default {
     };
   },
   mounted() {
-    
     // Select the canvas element
     const canvas = this.$refs.canvas;
-    
-    console.log(this.data[0].Area_Habitat);
-    const data = {
-  name: "Root",
-  children: this.data.map((habitat) => ({
-    name: habitat.Habitat_name,
-    value: parseFloat(habitat.Area_Habitat),
-  })),
-};
+
+    const data = this.data.map((habitat) => ({
+      name: habitat.Habitat_name,
+      area: parseFloat(habitat.Area_Habitat),
+      potentialAbove: parseFloat(habitat.Above_ground_potential_storage),
+      potentialBelow: parseFloat(habitat.Below_ground_potential_storage),
+    }));
 
     // Set up dimensions
     const width = 400;
@@ -51,11 +48,14 @@ export default {
       .attr("width", width)
       .attr("height", height);
 
-    // Create a hierarchical layout
-    const root = d3.hierarchy(data).sum((d) => d.value);
-
     // Create color scale
     const color = d3.scaleOrdinal(d3.schemeCategory10);
+    // Create treemap layout
+    const treemap = d3.treemap().size([width, height]);
+
+    // Compute the treemap layout
+    const root = d3.hierarchy({ children: data }).sum((d) => d.area);
+    const treemapData = treemap(root);
 
     const partition = d3
       .partition()
@@ -63,22 +63,25 @@ export default {
       .padding(1)
       .round(true);
 
-    // Apply the layout to our data
     const nodes = partition(root).descendants();
 
-    // Draw rectangles with varying sizes and colors
+    // Draw rectangles
     svg
       .selectAll("rect")
-      .data(nodes)
+      .data(treemapData.descendants())
       .enter()
       .append("rect")
       .attr("x", (d) => d.x0)
       .attr("y", (d) => d.y0)
       .attr("fill", (d) => color(d.depth))
-      .attr("width", (d) => d.x1 - d.x0 ) // Add randomness to width
-      .attr("height", (d) => d.y1 - d.y0) // Add randomness to height
+      .attr("width", (d) => d.x1 - d.x0)
+      .attr("height", (d) => d.y1 - d.y0)
       .attr("stroke", "white")
-      .attr("stroke-width", 2);
+      .attr("stroke-width", 2)
+      .each(function (d) {
+        this.potentialAbove = d.data.potentialAbove;
+        this.potentialBelow = d.data.potentialBelow;
+      });
 
     const colors = [0x2194ce, 0xff6347, 0x8a2be2, 0x00fa9a, 0xffd700];
 
@@ -96,8 +99,8 @@ export default {
       let rectWidth = parseFloat(rectangle.getAttribute("width")) / 6;
       let rectHeight = parseFloat(rectangle.getAttribute("height")) / 6;
 
-      // Generate a random extrusion depth between 10 and 30
-      const rectDepth = Math.random() * (30 - 10) + 10;
+      const rectDepthAbove = parseFloat(rectangle.potentialAbove);
+      const rectDepthBelow = parseFloat(rectangle.potentialBelow);
 
       // Extrude in the positive direction
       const geometryPositive = new THREE.ExtrudeGeometry(
@@ -108,7 +111,7 @@ export default {
           new THREE.Vector2(0, rectHeight),
           new THREE.Vector2(0, 0),
         ]),
-        { depth: rectDepth, bevelEnabled: false }
+        { depth: rectDepthAbove, bevelEnabled: false }
       );
 
       // Extrude in the negative direction
@@ -120,7 +123,7 @@ export default {
           new THREE.Vector2(0, rectHeight),
           new THREE.Vector2(0, 0),
         ]),
-        { depth: Math.abs(rectDepth), bevelEnabled: false }
+        { depth: Math.abs(rectDepthBelow), bevelEnabled: false }
       );
 
       // Create meshes for positive and negative extrusions
@@ -140,7 +143,7 @@ export default {
       meshNegative.position.set(
         (parseFloat(rectangle.getAttribute("x")) + rectHeight) / 6 - 40,
         -(parseFloat(rectangle.getAttribute("y")) + rectHeight / 2) / 6,
-        -rectDepth
+        -rectDepthBelow
       );
 
       // Add meshes to the scene
